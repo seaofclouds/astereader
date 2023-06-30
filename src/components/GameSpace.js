@@ -3,6 +3,7 @@ import ScrollingText from "./ScrollingText";
 import Bullet from "./Bullet";
 
 const GameSpace = () => {
+  const [gameState, setGameState] = useState("running");
   const [text, setText] = useState("");
   const [rotation, setRotation] = useState(0);
   const [x, setX] = useState(0);
@@ -10,10 +11,30 @@ const GameSpace = () => {
   const spaceship = useRef();
   const [bullets, setBullets] = useState([]);
   const [score, setScore] = useState(0);
-const velocity = useRef({x: 0, y: 0});
+  const velocity = useRef({x: 0, y: 0});
   const acceleration = useRef({x: 0, y: 0});
   const speed = 0.05; // control this to change the spaceship's speed
   const [thrust, setThrust] = useState(0);
+  const [lives, setLives] = useState(3);
+const [gameId, setGameId] = useState(0);
+
+  // Add a function to reset the game state and variables
+  const restartGame = () => {
+	setGameState("running");
+	setLives(3);
+	setScore(0);
+	setBullets([]);
+	setText("");
+	setX(window.innerWidth / 2 - spaceship.current.offsetWidth / 2);
+	setY(window.innerHeight / 2 - spaceship.current.offsetHeight / 2);
+	setRotation(0);
+	velocity.current = {x: 0, y: 0};
+	acceleration.current = {x: 0, y: 0};
+	setThrust(0);
+	document.body.classList.remove('game-over');
+	setGameId(gameId => gameId + 1); 
+	
+  };
 
   useEffect(() => {
 const highlightRandomWords = (text) => {
@@ -33,7 +54,7 @@ const highlightRandomWords = (text) => {
 	fetch("/content.txt")
 	  .then((response) => response.text())
 	  .then((data) => setText(highlightRandomWords(data)));
-  }, []);
+  }, [gameId]);
 
   useEffect(() => {
 	setX(window.innerWidth / 2 - spaceship.current.offsetWidth / 2);
@@ -62,12 +83,21 @@ const highlightRandomWords = (text) => {
 		case 'ArrowDown':
 			acceleration.current = { x: 0, y: 0 };  // To stop acceleration
 			break;
-          case ' ':
-			setBullets(bullets => [
-			  ...bullets,
-			  { id: Date.now(), x: x + spaceship.current.offsetWidth / 2, y: y + spaceship.current.offsetHeight / 2, rotation, hit: false }
-			]);
-			break;
+case ' ':
+			  const bulletOffsetX = 4;  // Adjust this as per your requirement
+			  const bulletOffsetY = 20;  // Adjust this as per your requirement
+			  setBullets(bullets => [
+				...bullets,
+				{ 
+				  id: Date.now(), 
+				  x: x + spaceship.current.offsetWidth / 2 - bulletOffsetX, 
+				  y: y + spaceship.current.offsetHeight / 2 - bulletOffsetY,
+				  rotation, 
+				  hit: false 
+				}
+			  ]);
+			  break;
+
 		default:
 		  break;
 	  }
@@ -89,55 +119,110 @@ const highlightRandomWords = (text) => {
 	  window.removeEventListener('keyup', handleKeyUp);
 	}
   }, [rotation, x, y]);
-  
-  useEffect(() => {
-	const intervalId = setInterval(() => {
-	  const spaceshipRect = spaceship.current.getBoundingClientRect();
-	  
-	  const highlightElements = document.getElementsByClassName('highlight');
-	  for (let i = 0; i < highlightElements.length; i++) {
-		if (highlightElements[i].classList.contains('hit')) {
-		  continue; // Skip the element if it already has the hit class
-		}
-  
-		const wordRect = highlightElements[i].getBoundingClientRect();
-		// Check for collision
-		if (
-		  wordRect.left < spaceshipRect.right &&
-		  wordRect.right > spaceshipRect.left &&
-		  wordRect.top < spaceshipRect.bottom &&
-		  wordRect.bottom > spaceshipRect.top
-		) {
-		// collision detected, invert colors
-		  document.body.classList.add('invert');
-		  setTimeout(() => {
-			document.body.classList.remove('invert');
-		  }, 500);		}
-	  }
-	}, 50);  // Check every 50ms
-  
-	return () => {
-	  clearInterval(intervalId);
-	}
-  }, []);
+    
+ 
+ useEffect(() => {
+   const intervalId = setInterval(() => {
+	 const spaceshipRect = spaceship.current.getBoundingClientRect();
+ 
+	 const highlightElements = document.getElementsByClassName('highlight');
+	 for (let i = 0; i < highlightElements.length; i++) {
+	   if (highlightElements[i].classList.contains('hit') || highlightElements[i].classList.contains('collided')) {
+		 continue; // Skip the element if it already has the hit class or it has already collided
+	   }
+ 
+	   const wordRect = highlightElements[i].getBoundingClientRect();
+	   // Check for collision
+	   if (
+		 wordRect.left < spaceshipRect.right &&
+		 wordRect.right > spaceshipRect.left &&
+		 wordRect.top < spaceshipRect.bottom &&
+		 wordRect.bottom > spaceshipRect.top
+	   ) {
+		 highlightElements[i].classList.add('collided'); // Mark the element as having collided
+		 setLives(lives => lives - 1);
+		 // collision detected, invert colors
+		 document.body.classList.add('invert');
+		 setTimeout(() => {
+		   document.body.classList.remove('invert');
+		 }, 500);
+	   }
+	 }
+   }, 50); // Check every 50ms
+ 
+   return () => {
+	 clearInterval(intervalId);
+   }
+ }, []);
 
-  useEffect(() => {
-	const intervalId = setInterval(() => {
-	  setBullets(bullets => bullets
-		.map(bullet => {
-		  let radian = bullet.rotation * Math.PI / 180;
-		  bullet.x -= bulletSpeed * Math.sin(-radian);
-		  bullet.y -= bulletSpeed * Math.cos(-radian);
-		  return bullet;
-		})
-		.filter(bullet => bullet.x >= 0 && bullet.x <= window.innerWidth && bullet.y >= 0 && bullet.y <= window.innerHeight)
-	  );
-	}, 50);  // Adjust as needed
-  
-	return () => {
-	  clearInterval(intervalId);
-	}
-  }, []);
+
+
+ useEffect(() => {
+   const intervalId = setInterval(() => {
+	 setBullets((bullets) =>
+	   bullets.map((bullet) => {
+		 // Skip the bullet if it already hit a target
+		 if (bullet.hit) {
+		   // Set a timeout to remove bullet after a short delay
+		   setTimeout(() => {
+			 bullet.remove = true;
+		   }, 200); // 200 ms delay, adjust as needed
+		   return bullet;
+		 }
+ 
+		 let bulletCopy = {...bullet}; // We create a copy of bullet to avoid direct state modification
+		 let radian = bullet.rotation * Math.PI / 180;
+		 bulletCopy.x -= bulletSpeed * Math.sin(-radian);
+		 bulletCopy.y -= bulletSpeed * Math.cos(-radian);
+ 
+		 const highlightElements = document.getElementsByClassName('highlight');
+		 for (let i = 0; i < highlightElements.length; i++) {
+		   if (highlightElements[i].classList.contains('hit')) {
+			 // Skip the check if word is already hit
+			 continue;
+		   }
+		   const rect = highlightElements[i].getBoundingClientRect();
+		   if (
+			 bulletCopy.x >= rect.left &&
+			 bulletCopy.x <= rect.right &&
+			 bulletCopy.y >= rect.top &&
+			 bulletCopy.y <= rect.bottom
+		   ) {
+			 bulletCopy.hit = true;
+			 highlightElements[i].classList.add('hit'); // Add the 'hit' class
+ 
+			 // Add score based on the type of the word
+			 if (highlightElements[i].classList.contains('highlight')) {
+			   setScore((score) => score + 5);
+			 } else if (highlightElements[i].classList.contains('em')) {
+			   setScore((score) => score + 10);
+			 } else if (highlightElements[i].classList.contains('strong')) {
+			   setScore((score) => score + 15);
+			 }
+ 
+			 break;
+		   }
+		 }
+ 
+		 return bulletCopy;
+	   })
+	   .filter(
+		 (bullet) =>
+		   // Ensure bullets that are marked for removal are filtered out
+		   !bullet.remove &&
+		   bullet.x >= 0 &&
+		   bullet.x <= window.innerWidth &&
+		   bullet.y >= 0 &&
+		   bullet.y <= window.innerHeight
+	   )
+	 );
+   }, 50); // Adjust as needed
+ 
+   return () => {
+	 clearInterval(intervalId);
+   };
+ }, []);
+
   
   const bulletSpeed = 5; // Declare the bulletSpeed variable here
   
@@ -186,55 +271,102 @@ useEffect(() => {
 	};
   }, [x, y, rotation, thrust]);
 
-  
+useEffect(() => {
+	if (lives <= 0) {
+	  // Fade to black and show "GAME OVER"
+	  document.body.classList.add('game-over');
+	}
+  }, [lives]);
+
+
 useEffect(() => {
 	const intervalId = setInterval(() => {
-	  setBullets(bullets => bullets.map(bullet => {
-		// Skip the bullet if it already hit a target
-		if (bullet.hit) return bullet;
-  
-		let radian = bullet.rotation * Math.PI / 180;
-		bullet.x -= bulletSpeed * Math.sin(-radian);
-		bullet.y -= bulletSpeed * Math.cos(-radian);
-  
-		const highlightElements = document.getElementsByClassName('highlight');
-		for (let i = 0; i < highlightElements.length; i++) {
-		  const rect = highlightElements[i].getBoundingClientRect();
-		  if (bullet.x >= rect.left && bullet.x <= rect.right && bullet.y >= rect.top && bullet.y <= rect.bottom) {
-			bullet.hit = true;
-		  highlightElements[i].classList.add('hit'); // Add the 'hit' class
-			highlightElements[i].style.color = 'white';
-  
-			// Add score based on the type of the word
-			if (highlightElements[i].classList.contains('highlight')) {
-			  setScore(score => score + 5);
-			} else if (highlightElements[i].classList.contains('em')) {
-			  setScore(score => score + 10);
-			} else if (highlightElements[i].classList.contains('strong')) {
-			  setScore(score => score + 15);
+	  setBullets((bullets) =>
+		bullets
+		  .map((bullet) => {
+			// Skip the bullet if it already hit a target
+			if (bullet.hit) {
+			  // Set a timeout to remove bullet after a short delay
+			  setTimeout(() => {
+				bullet.remove = true;
+			  }, 200); // 200 ms delay, adjust as needed
+			  return bullet;
 			}
   
-			break;
-		  }
-		}
+			let radian = bullet.rotation * Math.PI / 180;
+			bullet.x -= bulletSpeed * Math.sin(-radian);
+			bullet.y -= bulletSpeed * Math.cos(-radian);
   
-		return bullet;
-	  })
-	  .filter(bullet => bullet.x >= 0 && bullet.x <= window.innerWidth && bullet.y >= 0 && bullet.y <= window.innerHeight));
-	}, 50);  // Adjust as needed
+			const highlightElements = document.getElementsByClassName('highlight');
+			for (let i = 0; i < highlightElements.length; i++) {
+			  if (highlightElements[i].classList.contains('hit')) {
+				// Skip the check if word is already hit
+				continue;
+			  }
+			  const rect = highlightElements[i].getBoundingClientRect();
+			  if (
+				bullet.x >= rect.left &&
+				bullet.x <= rect.right &&
+				bullet.y >= rect.top &&
+				bullet.y <= rect.bottom
+			  ) {
+				bullet.hit = true;
+				highlightElements[i].classList.add('hit'); // Add the 'hit' class
+  
+				// Add score based on the type of the word
+				if (highlightElements[i].classList.contains('highlight')) {
+				  setScore((score) => score + 5);
+				} else if (highlightElements[i].classList.contains('em')) {
+				  setScore((score) => score + 10);
+				} else if (highlightElements[i].classList.contains('strong')) {
+				  setScore((score) => score + 15);
+				}
+  
+				break;
+			  }
+			}
+  
+			return bullet;
+		  })
+		  .filter(
+			(bullet) =>
+			  // Ensure bullets that are marked for removal are filtered out
+			  !bullet.remove &&
+			  bullet.x >= 0 &&
+			  bullet.x <= window.innerWidth &&
+			  bullet.y >= 0 &&
+			  bullet.y <= window.innerHeight
+		  )
+	  );
+	}, 20); // Adjust as needed
   
 	return () => {
 	  clearInterval(intervalId);
-	}
+	};
   }, []);
+
 
 return (
 	<div className="App-header">
 	  <ScrollingText text={text} scrollSpeed={.25} />
 	  <div className="spacecraft" ref={spaceship} style={{left: `${x}px`, top: `${y}px`, transform: `rotate(${rotation}deg)`}}>▲</div>
 
-	  {bullets.map(bullet => <Bullet key={bullet.id} x={bullet.x} y={bullet.y} rotation={bullet.rotation} />)}
+{bullets.map(bullet => (
+		<Bullet
+		  key={bullet.id}
+		  x={bullet.x}
+		  y={bullet.y}
+		  rotation={bullet.rotation}
+		  hit={bullet.hit}
+		/>
+	  ))}
 	  <div className="score">Score: {score}</div>
+	  <div className="lives">Lives: {lives}</div>
+	  <div className={`game-over-message ${lives <= 0 ? 'visible' : ''}`}>
+	  	<h1>GAME OVER</h1>
+		  <button onClick={restartGame} className={`restart-button ${lives <= 0 ? 'visible' : ''}`}>Read Again</button>
+	  </div>
+
 	</div>
   );
 

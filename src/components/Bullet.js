@@ -1,17 +1,18 @@
 const Bullet = ({ x, y, rotation, hit }) => {
   return (
-	<div className="bullet"
+	<div
+	  className={`${hit ? "bullet-shell" : "bullet"}`}
 	  style={{
 		left: `${x}px`,
 		top: `${y}px`,
-		transform: `rotate(${rotation}deg)`,
-		color: hit ? 'red' : 'white' 
+		transform: `rotate(${rotation}deg)`
 	  }}
 	>
-	  {hit ? '*' : '|'}  
+	  {hit ? "*" : "|"}
 	</div>
   );
 };
+
 
 
 export default Bullet;
