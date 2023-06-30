@@ -1,38 +1,76 @@
+body {
+  background-color: black;
+  color: ivory;
+  margin: 0;
+  padding:0;
+}
 .App {
+    text-align: center;
+}
+.scrolling-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 92vh;
+  overflow: hidden;
+  white-space: pre-wrap;
+  padding: 50px;
+  text-align: left;
+  line-height:1.5em;
+}
+
+.highlight {
+  background-color: burgundy;
+  border-radius:5px;
+}
+
+.spacecraft {
+  position: fixed;
+  font-size: 3rem;
+  background-color: hsla(0,0%,0%,0.5);
+  border-radius: 5px;
+}
+.bullet {
+  position: fixed;
+  font-size:2rem;
+  background-color: hsla(0,0%,0%,0.5);
   text-align: center;
 }
+.score {
+  background-color: hsla(0,0%,0%,0.6);
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
 
 .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  position: relative;
+
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+}
+.highlight {
+    background-color: maroon;
+    color: white;
+    padding-left:.2em;
+    padding-right:.2em;
+    margin-right: .15em;
+}
+.hit {
+  animation: fade 0.5s forwards; 
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+@keyframes fade {
+  0% {background-color: red;}
+  100% {background-color: #282c34;}
 }
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.invert {
+  filter: invert(1);
+  transition: filter 0.5s;
 }
