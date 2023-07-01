@@ -1,7 +1,5 @@
 name: Deploy React
 
-  pull_request:
-    branches: [ "main" ]
 on:
   push:
     branches: [ "main" ]
