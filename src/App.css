@@ -102,10 +102,22 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 3em;
+}
+.game-over-message h1 {
+  font-size: 4em;
 }
 .game-over-message.visible {
   display: block;
   opacity: 1;
 }
 
+button.restart-button {
+  font-size:1em;
+  border: none;
+  padding: .2em;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+  border-radius: 5px;
+  background-color: ivory;
+}
