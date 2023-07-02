@@ -36,7 +36,6 @@ const [gameId, setGameId] = useState(0);
 	
   };
 
-  useEffect(() => {
 const highlightRandomWords = (text) => {
 	const words = text.split(' ');
 	for (let i = 0; i < words.length; i++) {
@@ -47,21 +46,27 @@ const highlightRandomWords = (text) => {
 	  }
 	}
 	return words.join(' ');
-  }
-
-
-
-	fetch("/content.txt")
-	  .then((response) => response.text())
-	  .then((data) => setText(highlightRandomWords(data)));
-  }, [gameId]);
+ };
 
   useEffect(() => {
-	setX(window.innerWidth / 2 - spaceship.current.offsetWidth / 2);
-	setY(window.innerHeight / 2 - spaceship.current.offsetHeight / 2);
-  }, []);
+	  if (gameState === "running") {
+		fetch("/content.txt")
+		  .then((response) => response.text())
+		  .then((data) => setText(highlightRandomWords(data)));
+	  }
+	}, [gameState, gameId]);
+
 
   useEffect(() => {
+		if (gameState === "running") {
+		  setX(window.innerWidth / 2 - spaceship.current.offsetWidth / 2);
+		  setY(window.innerHeight / 2 - spaceship.current.offsetHeight / 2);
+		}
+	  }, [gameState]);
+
+  useEffect(() => {
+	  if (gameState === "running") {
+
 	const handleKeyDown = (e) => {
 	  e.preventDefault();
 	  switch(e.key) {
@@ -97,7 +102,6 @@ case ' ':
 				}
 			  ]);
 			  break;
-
 		default:
 		  break;
 	  }
@@ -109,6 +113,8 @@ case ' ':
 		case 'ArrowUp':
 		  setThrust(0);
 		  break;
+	    default:
+		  break;
 	  }
 	}
 	window.addEventListener('keydown', handleKeyDown);
@@ -118,8 +124,8 @@ case ' ':
 	  window.removeEventListener('keydown', handleKeyDown);
 	  window.removeEventListener('keyup', handleKeyUp);
 	}
-  }, [rotation, x, y]);
-    
+	}
+	  }, [gameState, rotation, x, y]);    
  
  useEffect(() => {
    const intervalId = setInterval(() => {
@@ -158,6 +164,8 @@ case ' ':
 
 
  useEffect(() => {
+	 if (gameState === "running") {
+
    const intervalId = setInterval(() => {
 	 setBullets((bullets) =>
 	   bullets.map((bullet) => {
@@ -221,7 +229,8 @@ case ' ':
    return () => {
 	 clearInterval(intervalId);
    };
- }, []);
+   }
+  }, [gameState]);
 
   
   const bulletSpeed = 5; // Declare the bulletSpeed variable here
@@ -280,6 +289,8 @@ useEffect(() => {
 
 
 useEffect(() => {
+	if (gameState === "running") {
+
 	const intervalId = setInterval(() => {
 	  setBullets((bullets) =>
 		bullets
@@ -343,7 +354,9 @@ useEffect(() => {
 	return () => {
 	  clearInterval(intervalId);
 	};
-  }, []);
+  }
+  }, [gameState]);
+
 
 
 return (
