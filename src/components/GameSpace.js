@@ -50,11 +50,24 @@ const GameSpace = () => {
 	}, [rotation, x, y, thrust]);
 
   /* Hook to fetch text data on game start */
+	
 	  useEffect(() => {
 		if (gameState === "running") {
-		  fetch("/content.txt")
-			.then((response) => response.text())
-			.then((data) => setText(highlightRandomWords(data)));
+			const urlParams = new URLSearchParams(window.location.search);
+			// const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+			const targetUrl = urlParams.get('text') || "/content.txt";
+			// fetch(proxyUrl + targetUrl)
+			fetch(targetUrl)
+			  .then((response) => {
+				if (!response.ok) {
+				  throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.text()})
+			  .then((data) => setText(highlightRandomWords(data)))
+			  .catch((error) => {
+				 console.log('Fetch failed: ', error);
+				 fetch("/content.txt").then((response) => response.text()).then((data) => setText(highlightRandomWords(data))); // On error, load default text
+			  });
 		}
 	  }, [gameState, gameId]);
 
