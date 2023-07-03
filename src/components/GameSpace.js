@@ -1,7 +1,13 @@
+// React Imports
 import React, { useState, useEffect, useRef } from "react";
+
+// Component Imports
 import ScrollingText from "./ScrollingText";
 import Bullet from "./Bullet";
-import {useBullet} from "./useBullet"; 
+import Spaceship from './Spaceship';
+
+// Hooks Imports
+import { useBullet } from "./useBullet"; 
 import useSpaceship from './useSpaceship';
 
 // Main Functional Component
@@ -31,7 +37,8 @@ const GameSpace = () => {
 	  handleKeyDown,
 	  handleKeyUp
 } = useSpaceship(setBullets);
-	  
+	
+	/* Hook to add keydown and keyup event listeners */
   useEffect(() => {
 	  window.addEventListener('keydown', handleKeyDown);
 	  window.addEventListener('keyup', handleKeyUp);
@@ -42,9 +49,15 @@ const GameSpace = () => {
 	  }
 	}, [rotation, x, y, thrust]);
 
+  /* Hook to fetch text data on game start */
+	  useEffect(() => {
+		if (gameState === "running") {
+		  fetch("/content.txt")
+			.then((response) => response.text())
+			.then((data) => setText(highlightRandomWords(data)));
+		}
+	  }, [gameState, gameId]);
 
-  // Function to reset the game state and variables
-  // Reset game state and use the useSpaceship hook to reset spaceship variables
 	const restartGame = () => {
 	  setGameState("running");
 	  setScore(0);
@@ -54,6 +67,14 @@ const GameSpace = () => {
 	  document.body.classList.remove('game-over');
 	  setGameId(gameId => gameId + 1);
 	};
+	
+	/* Hook to reset spaceship position on game start */
+	useEffect(() => {
+		if (gameState === "running") {
+		  setX(window.innerWidth / 2 - spaceship.current.offsetWidth / 2);
+		  setY(window.innerHeight / 2 - spaceship.current.offsetHeight / 2);
+		}
+	  }, [gameState]);
 
   // Function to Highlight Random Words 
   const highlightRandomWords = (text) => {
@@ -68,28 +89,9 @@ const GameSpace = () => {
 	return words.join(' ');
   };
 
-  // UseEffect Hooks
-  // Fetch text data on game start
-  useEffect(() => {
-	if (gameState === "running") {
-	  fetch("/content.txt")
-		.then((response) => response.text())
-		.then((data) => setText(highlightRandomWords(data)));
-	}
-  }, [gameState, gameId]);
-
-  // Reset spaceship position on game start
-  useEffect(() => {
-	  
-	if (gameState === "running") {
-
-	  setX(window.innerWidth / 2 - spaceship.current.offsetWidth / 2);
-	  setY(window.innerHeight / 2 - spaceship.current.offsetHeight / 2);
-	}
-  }, [gameState]);
 
 
-  // Check collision with words every 50ms
+  /* Hook to check collision with words every 50ms */
   useEffect(() => {
 	const intervalId = setInterval(() => {
 
@@ -127,7 +129,7 @@ const GameSpace = () => {
 
 
 
-  // Display game over message when lives run out
+  /* Hook to display game over message when lives run out */
   useEffect(() => {
 	if (lives <= 0) {
 	  // Fade to black and show "GAME OVER"
@@ -135,7 +137,7 @@ const GameSpace = () => {
 	}
   }, [lives]);
 
-  // Handle bullets (create, move, hit, remove)
+  /* Hook to handle bullets (create, move, hit, remove) */
   useEffect(() => {
 	if (gameState === "running") {
 
@@ -205,7 +207,7 @@ const GameSpace = () => {
   return (
 	<div className="App-header">
 	  <ScrollingText text={text} scrollSpeed={.25} />
-	  <div className="spacecraft" ref={spaceship} style={{left: `${x}px`, top: `${y}px`, transform: `rotate(${rotation}deg)`}}>▲</div>
+	  <Spaceship x={x} y={y} rotation={rotation} spaceship={spaceship} />
 
 	{bullets.map(bullet => (
 		<Bullet
