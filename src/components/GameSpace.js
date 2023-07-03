@@ -1,5 +1,5 @@
 // React Imports
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 
 // Component Imports
 import ScrollingText from "./ScrollingText";
@@ -23,16 +23,15 @@ const GameSpace = () => {
   const scrollSpeedParam = parseFloat(params.get('speed') ? params.get('speed') : '.25');
   const highlightWordsParam = parseFloat(params.get('targets') ? params.get('targets') : '.2');
   
-  
+  // The following variables can be uncommented if used in the future.
+  // const acceleration;
+  // const setRotation;
+  // const velocity;
+  // const speed;
+  // const setThrust;
   
   const {
 	  rotation,
-	  acceleration,
-	  setRotation,
-	  velocity,
-	  speed,
-	  thrust,
-	  setThrust,
 	  x,
 	  setX,
 	  y,
@@ -54,7 +53,7 @@ const GameSpace = () => {
 		window.removeEventListener('keydown', handleKeyDown);
 		window.removeEventListener('keyup', handleKeyUp);
 	  }
-	}, [rotation, x, y, thrust]);
+	}, [handleKeyDown, handleKeyUp]);
 
   /* Hook to fetch text data on game start */
 	
