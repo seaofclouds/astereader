@@ -1,5 +1,5 @@
 // React Imports
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 // Component Imports
 import ScrollingText from "./ScrollingText";
@@ -23,13 +23,6 @@ const GameSpace = () => {
   const scrollSpeedParam = parseFloat(params.get('speed') ? params.get('speed') : '.25');
   const highlightWordsParam = parseFloat(params.get('targets') ? params.get('targets') : '.2');
   
-  // The following variables can be uncommented if used in the future.
-  // const acceleration;
-  // const setRotation;
-  // const velocity;
-  // const speed;
-  // const setThrust;
-  
   const {
 	  rotation,
 	  x,
@@ -44,6 +37,21 @@ const GameSpace = () => {
 	  handleKeyUp
 } = useSpaceship(setBullets);
 	
+	// Function to Highlight Random Words 
+	  const highlightRandomWords = useCallback((text) => {
+		const words = text.split(/\b(?=\w)/); // Split text into words using positive lookahead to preserve spaces
+		
+		for (let i = 0; i < words.length; i++) {
+		  // Randomly decide whether to highlight this word
+		  if (Math.random() < highlightWordsParam && ! /^\s*$/.test(words[i])) {
+			let score = Math.floor(Math.random() * 3) + 1;
+			words[i] = `<span class='highlight' data-score='${score * 5}'>${words[i]}</span>`;
+		  }
+		}
+		
+		return words.join('');
+	  }, [highlightWordsParam]);
+	  
 	/* Hook to add keydown and keyup event listeners */
   useEffect(() => {
 	  window.addEventListener('keydown', handleKeyDown);
@@ -75,7 +83,7 @@ const GameSpace = () => {
 				 fetch("/content.txt").then((response) => response.text()).then((data) => setText(highlightRandomWords(data))); // On error, load default text
 			  });
 		}
-	  }, [gameState, gameId]);
+	  }, [gameState, gameId, highlightRandomWords]);
 
 	const restartGame = () => {
 	  setGameState("running");
@@ -93,22 +101,7 @@ const GameSpace = () => {
 		  setX(window.innerWidth / 2 - spaceship.current.offsetWidth / 2);
 		  setY(window.innerHeight / 2 - spaceship.current.offsetHeight / 2);
 		}
-	  }, [gameState]);
-
-// Function to Highlight Random Words 
-	  const highlightRandomWords = (text) => {
-		const words = text.split(/\b(?=\w)/); // Split text into words using positive lookahead to preserve spaces
-	  
-		for (let i = 0; i < words.length; i++) {
-		  // Randomly decide whether to highlight this word
-		  if (Math.random() < highlightWordsParam && ! /^\s*$/.test(words[i])) {
-			let score = Math.floor(Math.random() * 3) + 1;
-			words[i] = `<span class='highlight' data-score='${score * 5}'>${words[i]}</span>`;
-		  }
-		}
-	  
-		return words.join('');
-	  };
+	  }, [gameState, setX, setY, spaceship]);
 
   /* Hook to check collision with words every 50ms */
   useEffect(() => {
@@ -144,7 +137,7 @@ const GameSpace = () => {
 	return () => {
 	  clearInterval(intervalId);
 	}
-  }, []);
+  }, [setLives, spaceship]);
 
 
 
@@ -220,7 +213,7 @@ const GameSpace = () => {
 		clearInterval(intervalId);
 	  };
 	}
-  }, [gameState]);
+  }, [gameState, setBullets]);
 
 
   // Game render
