@@ -12,6 +12,17 @@ const useSpaceship = (setBullets) => {
 const [lives, setLives] = useState(3); // or any initial value you want
   const spaceship = useRef(null);
 
+
+  const reset = () => {
+	  setRotation(0);
+	  velocity.current = { x: 0, y: 0 };
+	  acceleration.current = { x: 0, y: 0 };
+	  setThrust(0);
+	  setX(window.innerWidth / 2 - spaceship.current.offsetWidth / 2);
+	  setY(window.innerHeight / 2 - spaceship.current.offsetHeight / 2);
+	  setLives(3);
+	};
+	
   const handleKeyDown = (e) => {
 	e.preventDefault();
 	switch(e.key) {
@@ -126,6 +137,7 @@ const [lives, setLives] = useState(3); // or any initial value you want
 	lives,   
 	setLives,
 	spaceship,
+	reset,
 	handleKeyDown,
 	handleKeyUp
   }

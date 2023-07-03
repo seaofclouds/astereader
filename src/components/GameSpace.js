@@ -14,11 +14,17 @@ import useSpaceship from './useSpaceship';
 const GameSpace = () => {
 
   // State Variables
+  const params = new URLSearchParams(window.location.search);
   const [gameState, setGameState] = useState("running");
   const [text, setText] = useState("");
   const [bullets, setBullets] = useBullet([], 5); // bulletSpeed is 5
   const [score, setScore] = useState(0);
   const [gameId, setGameId] = useState(0);
+  const scrollSpeedParam = parseFloat(params.get('speed') ? params.get('speed') : '.25');
+  const highlightWordsParam = parseFloat(params.get('targets') ? params.get('targets') : '.2');
+  
+  
+  
   const {
 	  rotation,
 	  acceleration,
@@ -34,6 +40,7 @@ const GameSpace = () => {
 	  lives,
 	  setLives,
 	  spaceship,
+	  reset,
 	  handleKeyDown,
 	  handleKeyUp
 } = useSpaceship(setBullets);
@@ -76,7 +83,7 @@ const GameSpace = () => {
 	  setScore(0);
 	  setBullets([]);
 	  setText("");
-	  spaceship.reset(); // Resets spaceship state via useSpaceship hook
+	  reset(); // Resets spaceship state via useSpaceship hook
 	  document.body.classList.remove('game-over');
 	  setGameId(gameId => gameId + 1);
 	};
@@ -89,20 +96,20 @@ const GameSpace = () => {
 		}
 	  }, [gameState]);
 
-  // Function to Highlight Random Words 
-  const highlightRandomWords = (text) => {
-	const words = text.split(' ');
-	for (let i = 0; i < words.length; i++) {
-	  // Randomly decide whether to highlight this word
-	  if (Math.random() < 0.1) {
-		let score = Math.floor(Math.random() * 3) + 1;
-		words[i] = `<span class='highlight' data-score='${score * 5}'> ${words[i]}</span>`;
-	  }
-	}
-	return words.join(' ');
-  };
-
-
+// Function to Highlight Random Words 
+	  const highlightRandomWords = (text) => {
+		const words = text.split(/\b(?=\w)/); // Split text into words using positive lookahead to preserve spaces
+	  
+		for (let i = 0; i < words.length; i++) {
+		  // Randomly decide whether to highlight this word
+		  if (Math.random() < highlightWordsParam && ! /^\s*$/.test(words[i])) {
+			let score = Math.floor(Math.random() * 3) + 1;
+			words[i] = `<span class='highlight' data-score='${score * 5}'>${words[i]}</span>`;
+		  }
+		}
+	  
+		return words.join('');
+	  };
 
   /* Hook to check collision with words every 50ms */
   useEffect(() => {
@@ -216,10 +223,11 @@ const GameSpace = () => {
 	}
   }, [gameState]);
 
+
   // Game render
   return (
 	<div className="App-header">
-	  <ScrollingText text={text} scrollSpeed={.25} />
+	  <ScrollingText text={text} scrollSpeed={scrollSpeedParam} />
 	  <Spaceship x={x} y={y} rotation={rotation} spaceship={spaceship} />
 
 	{bullets.map(bullet => (
