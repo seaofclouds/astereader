@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import ScrollingText from "./ScrollingText";
 import Bullet from "./Bullet";
+import {useBullet} from "./useBullet"; 
 
 const GameSpace = () => {
   const [gameState, setGameState] = useState("running");
@@ -9,7 +10,7 @@ const GameSpace = () => {
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
   const spaceship = useRef();
-  const [bullets, setBullets] = useState([]);
+  const [bullets, setBullets] = useBullet([], 5); // bulletSpeed is 5
   const [score, setScore] = useState(0);
   const velocity = useRef({x: 0, y: 0});
   const acceleration = useRef({x: 0, y: 0});
@@ -161,79 +162,7 @@ case ' ':
    }
  }, []);
 
-
-
- useEffect(() => {
-	 if (gameState === "running") {
-
-   const intervalId = setInterval(() => {
-	 setBullets((bullets) =>
-	   bullets.map((bullet) => {
-		 // Skip the bullet if it already hit a target
-		 if (bullet.hit) {
-		   // Set a timeout to remove bullet after a short delay
-		   setTimeout(() => {
-			 bullet.remove = true;
-		   }, 200); // 200 ms delay, adjust as needed
-		   return bullet;
-		 }
- 
-		 let bulletCopy = {...bullet}; // We create a copy of bullet to avoid direct state modification
-		 let radian = bullet.rotation * Math.PI / 180;
-		 bulletCopy.x -= bulletSpeed * Math.sin(-radian);
-		 bulletCopy.y -= bulletSpeed * Math.cos(-radian);
- 
-		 const highlightElements = document.getElementsByClassName('highlight');
-		 for (let i = 0; i < highlightElements.length; i++) {
-		   if (highlightElements[i].classList.contains('hit')) {
-			 // Skip the check if word is already hit
-			 continue;
-		   }
-		   const rect = highlightElements[i].getBoundingClientRect();
-		   if (
-			 bulletCopy.x >= rect.left &&
-			 bulletCopy.x <= rect.right &&
-			 bulletCopy.y >= rect.top &&
-			 bulletCopy.y <= rect.bottom
-		   ) {
-			 bulletCopy.hit = true;
-			 highlightElements[i].classList.add('hit'); // Add the 'hit' class
- 
-			 // Add score based on the type of the word
-			 if (highlightElements[i].classList.contains('highlight')) {
-			   setScore((score) => score + 5);
-			 } else if (highlightElements[i].classList.contains('em')) {
-			   setScore((score) => score + 10);
-			 } else if (highlightElements[i].classList.contains('strong')) {
-			   setScore((score) => score + 15);
-			 }
- 
-			 break;
-		   }
-		 }
- 
-		 return bulletCopy;
-	   })
-	   .filter(
-		 (bullet) =>
-		   // Ensure bullets that are marked for removal are filtered out
-		   !bullet.remove &&
-		   bullet.x >= 0 &&
-		   bullet.x <= window.innerWidth &&
-		   bullet.y >= 0 &&
-		   bullet.y <= window.innerHeight
-	   )
-	 );
-   }, 50); // Adjust as needed
- 
-   return () => {
-	 clearInterval(intervalId);
-   };
-   }
-  }, [gameState]);
-
   
-  const bulletSpeed = 5; // Declare the bulletSpeed variable here
   
   // add a new useEffect to update position with velocity and acceleration
 useEffect(() => {
@@ -288,76 +217,70 @@ useEffect(() => {
   }, [lives]);
 
 
-useEffect(() => {
-	if (gameState === "running") {
-
-	const intervalId = setInterval(() => {
-	  setBullets((bullets) =>
-		bullets
-		  .map((bullet) => {
-			// Skip the bullet if it already hit a target
-			if (bullet.hit) {
-			  // Set a timeout to remove bullet after a short delay
-			  setTimeout(() => {
-				bullet.remove = true;
-			  }, 200); // 200 ms delay, adjust as needed
-			  return bullet;
-			}
+  useEffect(() => {
+	  if (gameState === "running") {
   
-			let radian = bullet.rotation * Math.PI / 180;
-			bullet.x -= bulletSpeed * Math.sin(-radian);
-			bullet.y -= bulletSpeed * Math.cos(-radian);
-  
-			const highlightElements = document.getElementsByClassName('highlight');
-			for (let i = 0; i < highlightElements.length; i++) {
-			  if (highlightElements[i].classList.contains('hit')) {
-				// Skip the check if word is already hit
-				continue;
-			  }
-			  const rect = highlightElements[i].getBoundingClientRect();
-			  if (
-				bullet.x >= rect.left &&
-				bullet.x <= rect.right &&
-				bullet.y >= rect.top &&
-				bullet.y <= rect.bottom
-			  ) {
-				bullet.hit = true;
-				highlightElements[i].classList.add('hit'); // Add the 'hit' class
-  
-				// Add score based on the type of the word
-				if (highlightElements[i].classList.contains('highlight')) {
-				  setScore((score) => score + 5);
-				} else if (highlightElements[i].classList.contains('em')) {
-				  setScore((score) => score + 10);
-				} else if (highlightElements[i].classList.contains('strong')) {
-				  setScore((score) => score + 15);
+		const intervalId = setInterval(() => {
+		  setBullets((bullets) =>
+			bullets
+			  .map((bullet) => {
+				// Skip the bullet if it already hit a target
+				if (bullet.hit) {
+				  // Set a timeout to remove bullet after a short delay
+				  setTimeout(() => {
+					bullet.remove = true;
+				  }, 200); // 200 ms delay, adjust as needed
+				  return bullet;
 				}
-  
-				break;
-			  }
-			}
-  
-			return bullet;
-		  })
-		  .filter(
-			(bullet) =>
-			  // Ensure bullets that are marked for removal are filtered out
-			  !bullet.remove &&
-			  bullet.x >= 0 &&
-			  bullet.x <= window.innerWidth &&
-			  bullet.y >= 0 &&
-			  bullet.y <= window.innerHeight
-		  )
-	  );
-	}, 20); // Adjust as needed
-  
-	return () => {
-	  clearInterval(intervalId);
-	};
-  }
-  }, [gameState]);
-
-
+	
+				const highlightElements = document.getElementsByClassName('highlight');
+				for (let i = 0; i < highlightElements.length; i++) {
+				  if (highlightElements[i].classList.contains('hit')) {
+					// Skip the check if word is already hit
+					continue;
+				  }
+				  const rect = highlightElements[i].getBoundingClientRect();
+				  if (
+					bullet.x >= rect.left &&
+					bullet.x <= rect.right &&
+					bullet.y >= rect.top &&
+					bullet.y <= rect.bottom
+				  ) {
+					bullet.hit = true;
+					highlightElements[i].classList.add('hit'); // Add the 'hit' class
+	
+					// Add score based on the type of the word
+					if (highlightElements[i].classList.contains('highlight')) {
+					  setScore((score) => score + 5);
+					} else if (highlightElements[i].classList.contains('em')) {
+					  setScore((score) => score + 10);
+					} else if (highlightElements[i].classList.contains('strong')) {
+					  setScore((score) => score + 15);
+					}
+	
+					break;
+				  }
+				}
+	
+				return bullet;
+			  })
+			  .filter(
+				(bullet) =>
+				  // Ensure bullets that are marked for removal are filtered out
+				  !bullet.remove &&
+				  bullet.x >= 0 &&
+				  bullet.x <= window.innerWidth &&
+				  bullet.y >= 0 &&
+				  bullet.y <= window.innerHeight
+			  )
+		  );
+		}, 20); // Adjust as needed
+	
+		return () => {
+		  clearInterval(intervalId);
+		};
+	  }
+	}, [gameState]);
 
 return (
 	<div className="App-header">
